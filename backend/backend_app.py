@@ -18,24 +18,51 @@ def validate_post_data(data):
     return True
 
 
+def get_reversed(direction):
+    return direction == "desc"
+
+
 @app.route("/api/posts", methods=["GET", "POST"])
 def get_posts():
+    if not POSTS:
+        return "POSTS is empty"
+
     if request.method == "POST":
         post = request.get_json()
-        if not validate_post_data(post) == True:
+        validation_result = validate_post_data(post)
+
+        if validation_result is not True:
+            return (
+                jsonify(
+                    {"error": f"Invalid post data, {validation_result} is missing"}
+                ),
+                400,
+            )
+        post["id"] = max((post.get("id", 0) for post in POSTS), default=0) + 1
+        POSTS.append(post)
+        return jsonify(post), 201
+
+    sort_key = request.args.get("sort")
+    direction = request.args.get("direction")
+
+    if sort_key or direction:
+        if sort_key in ["title", "content"] and direction in ["asc", "desc"]:
+            reversed = get_reversed(direction)
+            sorted_posts = sorted(
+                POSTS, key=lambda post: post[sort_key], reverse=reversed
+            )
+            return jsonify(sorted_posts), 200
+        else:
             return (
                 jsonify(
                     {
-                        "error": f"Invalid post data, {validate_post_data(post)} is missing"
+                        "error": f"Invalid parameter sort should be 'title' or 'content' and direction should be 'asc' or 'desc'"
                     }
                 ),
                 400,
             )
-        post["id"] = max(post["id"] for post in POSTS) + 1
-        POSTS.append(post)
-        return jsonify(post), 201
 
-    return jsonify(POSTS)
+    return jsonify(POSTS), 200
 
 
 def find_post(id):
