@@ -75,7 +75,7 @@ def find_post(post_id):
             return post
 
 
-@app.route("/api/posts/<int:id>", methods=["PUT"])
+@app.route("/api/posts/<int:post_id>", methods=["PUT"])
 def update_post(post_id):
     post = find_post(post_id)
 
@@ -93,7 +93,7 @@ def update_post(post_id):
     )
 
 
-@app.route("/api/posts/<int:id>", methods=["DELETE"])
+@app.route("/api/posts/<int:post_id>", methods=["DELETE"])
 def delete_post(post_id):
     post = find_post(post_id)
 
