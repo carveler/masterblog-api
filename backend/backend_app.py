@@ -83,13 +83,12 @@ def delete_post(id):
 def search_post():
     searched_title = request.args.get("title")
     searched_content = request.args.get("content")
-    if searched_title or searched_content:
-        filtered_posts = [
-            post
-            for post in POSTS
-            if searched_title.lower() in post["title"].lower()
-            or searched_content.lower() in post["content"].lower()
-        ]
+    filtered_posts = [
+        post
+        for post in POSTS
+        if (searched_title and searched_title.lower() in post["title"].lower())
+        or (searched_content and searched_content.lower() in post["content"].lower())
+    ]
 
     if not filtered_posts:
         return jsonify([])
