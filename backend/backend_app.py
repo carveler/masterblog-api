@@ -25,7 +25,9 @@ def get_posts():
         if not validate_post_data(post) == True:
             return (
                 jsonify(
-                    {"error": f"Invalid post data, {validate_post_data(post)} is missing"}
+                    {
+                        "error": f"Invalid post data, {validate_post_data(post)} is missing"
+                    }
                 ),
                 400,
             )
@@ -34,6 +36,29 @@ def get_posts():
         return jsonify(post), 201
 
     return jsonify(POSTS)
+
+
+def find_post(id):
+    for post in POSTS:
+        if post["id"] == id:
+            return post
+
+
+@app.route("/api/posts/<int:id>", methods=["DELETE"])
+def delete_post(id):
+    post = find_post(id)
+
+    if post is None:
+        return (
+            jsonify({"error": f"Post with id {id} is not found."}),
+            404,
+        )
+
+    POSTS.remove(post)
+    return (
+            jsonify({"message": f"Post with id {id} has been deleted successfully."}),
+            200,
+        )
 
 
 if __name__ == "__main__":
