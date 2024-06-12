@@ -44,6 +44,24 @@ def find_post(id):
             return post
 
 
+@app.route("/api/posts/<int:id>", methods=["PUT"])
+def update_post(id):
+    post = find_post(id)
+
+    if post is None:
+        return (
+            jsonify({"error": f"Post with id {id} is not found."}),
+            404,
+        )
+
+    new_post = request.get_json()
+    post.update(new_post)
+    return (
+        jsonify(new_post),
+        200,
+    )
+
+
 @app.route("/api/posts/<int:id>", methods=["DELETE"])
 def delete_post(id):
     post = find_post(id)
