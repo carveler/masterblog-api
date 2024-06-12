@@ -79,5 +79,22 @@ def delete_post(id):
         )
 
 
+@app.route("/api/posts/search", methods=["GET"])
+def search_post():
+    searched_title = request.args.get("title")
+    searched_content = request.args.get("content")
+    if searched_title or searched_content:
+        filtered_posts = [
+            post
+            for post in POSTS
+            if searched_title.lower() in post["title"].lower()
+            or searched_content.lower() in post["content"].lower()
+        ]
+
+    if not filtered_posts:
+        return jsonify([])
+    return jsonify(filtered_posts), 200
+
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5002, debug=True)
