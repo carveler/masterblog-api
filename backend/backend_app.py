@@ -34,7 +34,8 @@ def get_posts():
         if validation_result is not True:
             return (
                 jsonify(
-                    {"error": f"Invalid post data, {validation_result} is missing"}
+                    {"error": f"Invalid post data, {validation_result} is "
+                              f"missing"}
                 ),
                 400,
             )
@@ -47,16 +48,19 @@ def get_posts():
 
     if sort_key or direction:
         if sort_key in ["title", "content"] and direction in ["asc", "desc"]:
-            reversed = get_reversed(direction)
+            sort_direction = get_reversed(direction)
             sorted_posts = sorted(
-                POSTS, key=lambda post: post[sort_key], reverse=reversed
+                POSTS, key=lambda blog_post: blog_post[sort_key],
+                reverse=sort_direction
             )
             return jsonify(sorted_posts), 200
         else:
             return (
                 jsonify(
                     {
-                        "error": f"Invalid parameter sort should be 'title' or 'content' and direction should be 'asc' or 'desc'"
+                        "error": f"Invalid parameter sort should be 'title' "
+                                 f"or 'content' and direction should be "
+                                 f"'asc' or 'desc'"
                     }
                 ),
                 400,
@@ -65,19 +69,19 @@ def get_posts():
     return jsonify(POSTS), 200
 
 
-def find_post(id):
+def find_post(post_id):
     for post in POSTS:
-        if post["id"] == id:
+        if post["id"] == post_id:
             return post
 
 
 @app.route("/api/posts/<int:id>", methods=["PUT"])
-def update_post(id):
-    post = find_post(id)
+def update_post(post_id):
+    post = find_post(post_id)
 
     if post is None:
         return (
-            jsonify({"error": f"Post with id {id} is not found."}),
+            jsonify({"error": f"Post with id {post_id} is not found."}),
             404,
         )
 
@@ -90,20 +94,21 @@ def update_post(id):
 
 
 @app.route("/api/posts/<int:id>", methods=["DELETE"])
-def delete_post(id):
-    post = find_post(id)
+def delete_post(post_id):
+    post = find_post(post_id)
 
     if post is None:
         return (
-            jsonify({"error": f"Post with id {id} is not found."}),
+            jsonify({"error": f"Post with id {post_id} is not found."}),
             404,
         )
 
     POSTS.remove(post)
     return (
-            jsonify({"message": f"Post with id {id} has been deleted successfully."}),
-            200,
-        )
+        jsonify({"message": f"Post with id {post_id} has been deleted " 
+                            f"successfully."}),
+        200,
+    )
 
 
 @app.route("/api/posts/search", methods=["GET"])
@@ -114,7 +119,8 @@ def search_post():
         post
         for post in POSTS
         if (searched_title and searched_title.lower() in post["title"].lower())
-        or (searched_content and searched_content.lower() in post["content"].lower())
+        or (searched_content and searched_content.lower() in
+            post["content"].lower())
     ]
 
     if not filtered_posts:
