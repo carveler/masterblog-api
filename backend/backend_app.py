@@ -13,13 +13,9 @@ POSTS = [
 def validate_post_data(data):
     if "title" not in data:
         return "title"
-    elif "content" not in data:
+    if "content" not in data:
         return "content"
-    return True
-
-
-def get_reversed(direction):
-    return direction == "desc"
+    return "Valid"
 
 
 @app.route("/api/posts", methods=["GET", "POST"])
@@ -31,10 +27,10 @@ def get_posts():
         post = request.get_json()
         validation_result = validate_post_data(post)
 
-        if validation_result is not True:
+        if validation_result is not "Valid":
             return (
                 jsonify(
-                    {"error": f"Invalid post data, {validation_result} is "
+                    {"error": f"Invalid post data, {validation_result} is " 
                               f"missing"}
                 ),
                 400,
@@ -43,30 +39,36 @@ def get_posts():
         POSTS.append(post)
         return jsonify(post), 201
 
-    sort_key = request.args.get("sort")
-    direction = request.args.get("direction")
+    sort_key = request.args.get("sort", "").strip().lower()
+    direction = request.args.get("direction", "").strip().lower()
 
-    if sort_key or direction:
-        if sort_key in ["title", "content"] and direction in ["asc", "desc"]:
-            sort_direction = get_reversed(direction)
-            sorted_posts = sorted(
-                POSTS, key=lambda blog_post: blog_post[sort_key],
-                reverse=sort_direction
-            )
-            return jsonify(sorted_posts), 200
-        else:
-            return (
-                jsonify(
-                    {
-                        "error": f"Invalid parameter sort should be 'title' "
-                                 f"or 'content' and direction should be "
-                                 f"'asc' or 'desc'"
-                    }
-                ),
-                400,
-            )
+    if sort_key and sort_key not in ["title", "content"]:
+        return (
+            jsonify(
+                {"error": "Invalid parameter sort should be 'title' " 
+                          "or 'content' "}
+            ),
+            400,
+        )
+    if direction and direction not in ["asc", "desc"]:
+        return (
+            jsonify(
+                {"error": "Invalid parameter direction should be 'asc' " 
+                          "or 'desc' "}
+            ),
+            400,
+        )
 
-    return jsonify(POSTS), 200
+    if sort_key:
+        sorted_posts = sorted(
+            POSTS.copy(),
+            key=lambda blog_post: blog_post.get(sort_key, ""),
+            reverse=(direction == "desc"),
+        )
+    else:
+        sorted_posts = POSTS.copy()
+
+    return jsonify(sorted_posts), 200
 
 
 def find_post(post_id):
@@ -105,22 +107,24 @@ def delete_post(post_id):
 
     POSTS.remove(post)
     return (
-        jsonify({"message": f"Post with id {post_id} has been deleted " 
-                            f"successfully."}),
+        jsonify(
+            {"message": f"Post with id {post_id} has been deleted " 
+                        f"successfully."}
+        ),
         200,
     )
 
 
 @app.route("/api/posts/search", methods=["GET"])
 def search_post():
-    searched_title = request.args.get("title")
-    searched_content = request.args.get("content")
+    searched_title = request.args.get("title", "").strip()
+    searched_content = request.args.get("content", "").strip()
     filtered_posts = [
         post
         for post in POSTS
         if (searched_title and searched_title.lower() in post["title"].lower())
-        or (searched_content and searched_content.lower() in
-            post["content"].lower())
+        or (searched_content and searched_content.lower() in post["content"].
+            lower())
     ]
 
     if not filtered_posts:
